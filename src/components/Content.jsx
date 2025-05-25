@@ -1,11 +1,13 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import UserState from './states/UserState'
+import { FaTrash, FaPen } from 'react-icons/fa'
 
 const Content = () => {
     const [userInfo, setUserInfo] = useState({});
     const [isEmpty, setIsEmpty] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [isDeleted, setIsDeleted] = useState(false);
 
     const handleDateFormat = date => {
         const unformattedDate = new Date(date);
@@ -36,7 +38,14 @@ const Content = () => {
         }, 1000)
 
         return () => source.cancel("Componente Desmontado");
-    }, [])
+    }, [isDeleted])
+
+    const handleDelete = async (id) => {
+        await axios.delete(`http://localhost:3000/users/delete/${id}`)
+        .then('usuário deletado', console.log(id))
+        .then(setIsDeleted(!isDeleted))
+        .catch(err => console.error(err))
+    }
 
     if (isEmpty)
         return <UserState state="Nenhum Usuário Encontrado." />
@@ -48,12 +57,19 @@ const Content = () => {
         <div className='outline outline-gray-700 rounded-lg p-3 mt-10 w-150 shadow-md bg-gray-950 h-100 overflow-y-auto overflow-x-hidden scrollbar-custom'>
             <div className="flex flex-col gap-6 mt-3">
                 {userInfo.map((user, index) => (
-                    <div>
+                    <div key={index} >
                         <p className='border w-fit border border-b-0 border-gray-700 rounded-t bg-gray-900 px-1 text-gray-500'>Registrado em: {new Date(user.use_register).toLocaleString()}</p>
-                        <div key={index} className="border border-gray-700 rounded-b-2xl rounded-tr-2xl p-6 shadow-lg bg-gray-900 text-white space-y-4 w-full">
-                            <h2 className="text-xl font-semibold border-b border-gray-600 pb-2">
-                                #{index + 1} - {user.use_name}
-                            </h2>
+                        <div className="border border-gray-700 rounded-b-2xl rounded-tr-2xl p-6 shadow-lg bg-gray-900 text-white space-y-4 w-full">
+                            <div className="flex justify-between text-xl font-semibold border-b border-gray-600 pb-2">
+                                <h2>#{index + 1} - {user.use_name}</h2>
+                                <div className='flex gap-5'>
+                                    <FaPen className='text-blue-500' />
+                                    <FaTrash
+                                        className='text-red-500'
+                                        onClick={() => handleDelete(user.use_id)}
+                                    />
+                                </div>
+                            </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Email:</span>
                                 <span className="font-medium">{user.use_email}</span>
